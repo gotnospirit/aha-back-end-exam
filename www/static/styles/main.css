@@ -1,0 +1,24 @@
+nav a {
+  color: #d64161;
+  font-size: 1.5em;
+  margin: 0 1em;
+  text-decoration: none;
+}
+
+nav a::before {
+  display: inline-block;
+  color: #000;
+  content: '>';
+  font-size: 80%;
+  font-weight: bold;
+  padding: 0 3px;
+}
+
+table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+td {
+  padding: .5em;
+}

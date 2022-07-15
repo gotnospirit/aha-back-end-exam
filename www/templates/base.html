@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>AHA Back-end Exam{% block title %} {% endblock %}</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/main.css') }}">
+</head>
+
+<body>
+  <nav>
+    {% if current_user.is_authenticated %}
+    {% if request.url_rule.endpoint != "index" %}<a href="{{ url_for('index') }}">Dashboard</a>{% endif %}
+    {% if request.url_rule.endpoint != "profile" %}<a href="{{ url_for('profile') }}">Profile</a>{% endif %}
+    {% if request.url_rule.endpoint == "profile" %}<a href="{{ url_for('logout') }}">Logout</a>{% endif %}
+    {% else %}
+    {% if request.url_rule.endpoint != "signup" %}<a href="{{ url_for('signup') }}">Sign Up</a>{% endif %}
+    {% if request.url_rule.endpoint != "login" %}<a href="{{ url_for('login') }}">Sign In</a>{% endif %}
+    {% endif %}
+  </nav>
+  <hr />
+  <div class="content">
+    {% block content %} {% endblock %}
+  </div>
+</body>
+
+</html>

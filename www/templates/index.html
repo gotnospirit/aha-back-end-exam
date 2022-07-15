@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+{% if not current_user.is_activated() %}
+<a href="{{ url_for('resend') }}">Resend Email Verification</a>
+{% endif %}
+{% if users %}
+    <h1>Dashboard</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Timestamp of user sign up</th>
+                <th>Number of times logged in</th>
+                <th>Timestamp of the last user session</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.created_at }} UTC</td>
+                <td>{{ user.signin_count }}</td>
+                <td>{{ user.last_signin_at }} UTC</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% if form %}
+    <hr/>
+    <form method="POST">
+        {{ form.csrf_token }}
+        <p>
+            {{ form.old_pwd.label }}
+            {{ form.old_pwd() }}
+        </p>
+
+        {% if form.old_pwd.errors %}
+            <ul class="errors">{% for error in form.old_pwd.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <p>
+            {{ form.password.label }}
+            {{ form.password() }}
+        </p>
+
+        {% if form.password.errors %}
+            <ul class="errors">{% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <p>
+            {{ form.confirm.label }}
+            {{ form.confirm() }}
+        </p>
+
+        {% if form.confirm.errors %}
+            <ul class="errors">{% for error in form.confirm.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        {{ form.submit(formnovalidate=True) }}
+    </form>
+{% endif %}
+{% endif %}
+{% endblock %}
