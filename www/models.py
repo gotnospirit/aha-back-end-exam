@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 import bcrypt
+import string
+import random
 
 
 db = SQLAlchemy()
@@ -46,13 +48,34 @@ class User(db.Model, UserMixin):
         self.signin_count += 1
         db.session.commit()
 
+    def activate(self, key: str) -> bool:
+        if key != self.activation_key:
+            return False
 
-def save_new_user(email: str, password: str) -> User:
+        self.activated_at = db.func.current_timestamp()
+        self.activation_key = None
+        self.last_signin_at = db.func.current_timestamp()
+        self.signin_count += 1
+        db.session.commit()
+        return True
+
+
+def generate_random_string(length: int) -> str:
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choice(chars) for _ in range(length))
+
+
+def save_new_user(email: str, password: str, is_activated=False) -> User:
     salt = bcrypt.gensalt()
     hash = bcrypt.hashpw(password.encode('utf-8'), salt)
 
     user = User(signin_count=1, email=email, password=hash,
                 pwd_salt=salt, nickname=email[:email.find("@")])
+
+    if not is_activated:
+        user.activation_key = generate_random_string(50)
+    else:
+        user.activated_at = db.func.current_timestamp()
 
     db.session.add(user)
     db.session.commit()

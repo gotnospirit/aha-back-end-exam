@@ -8,9 +8,9 @@
 {% if not user.is_activated() %}
 <div class="warning">Your email &lt;{{ user.email }}&gt; is not verified yet!</div>
 {% else %}
-<div>Your account &lt;{{ user.email }}&gt; was activated on {{ user.activated_at }} UTC</div>
+<div>Your account was activated on {{ user.activated_at }} UTC</div>
 {% endif %}
-
+<hr/>
 <form method="POST">
   {{ form.csrf_token }}
   <p>

@@ -12,7 +12,7 @@ flask run
 
 # TODO
 [x] Email/Password signup
-[ ] Send email verification
+[x] Send email verification
 [x] Login/Logout
 [x] User profile
 [x] Reset password

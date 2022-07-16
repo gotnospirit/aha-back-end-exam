@@ -1,9 +1,8 @@
-from www import app, db
-from www.models import save_new_user, fetch_all_users
+from www import app, db, mailer
+from www.models import find_user, save_new_user, fetch_all_users
 from flask import render_template, request, url_for, redirect
 from www.forms import SignupForm, LoginForm, ProfileForm, ChangePasswordForm
 from flask_login import login_user, logout_user, current_user, login_required
-from www.mailer import send_verification_mail
 
 
 @app.route('/', methods=('GET', 'POST'))
@@ -32,7 +31,7 @@ def signup():
     if form.validate_on_submit():
         user = save_new_user(form.email.data, form.password.data)
         if user.can_send_verification():
-            send_verification_mail(form.email.data)
+            mailer.send_verification(user)
         login_user(user, remember=True)
         return redirect(url_for('index'))
 
@@ -77,7 +76,18 @@ def profile():
 @login_required
 def resend():
     if current_user.can_send_verification():
-        send_verification_mail(current_user.email)
+        mailer.send_verification(current_user)
+    return redirect(url_for('index'))
+
+
+@app.route('/activate/<email>/<key>')
+def activate(email:str=None, key:str=None):
+    if email is not None and key is not None:
+        user = find_user(email)
+        if user and not user.is_activated():
+            if user.activate(key):
+                login_user(user, remember=True)
+
     return redirect(url_for('index'))
 
 

@@ -1,0 +1,4 @@
+Hi {{ nickname }}!
+
+Please, copy-paste the following URL in your favorite browser in order to activate your account:
+{{ activate_url }}
