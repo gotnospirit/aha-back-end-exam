@@ -1,5 +1,5 @@
-from www import app, db, mailer
-from www.models import find_user, save_new_user, fetch_all_users
+from www import app, mailer
+from www.models import User
 from flask import render_template, request, url_for, redirect
 from www.forms import SignupForm, LoginForm, ProfileForm, ChangePasswordForm
 from flask_login import login_user, logout_user, current_user, login_required
@@ -9,8 +9,10 @@ from flask_login import login_user, logout_user, current_user, login_required
 def index():
     users = None
     form = None
+    statistics = None
     if current_user.is_authenticated and current_user.is_activated():
-        users = fetch_all_users()
+        users = User.FetchAll()
+        statistics = User.GetStatistics()
 
         form = ChangePasswordForm()
         form.email.data = current_user.email
@@ -19,7 +21,7 @@ def index():
             current_user.update_password(form.password.data)
             return redirect(url_for('index'))
 
-    return render_template('index.html', users=users, form=form)
+    return render_template('index.html', users=users, form=form, statistics=statistics)
 
 
 @app.route('/signup', methods=('GET', 'POST'))
@@ -29,7 +31,7 @@ def signup():
 
     form = SignupForm()
     if form.validate_on_submit():
-        user = save_new_user(form.email.data, form.password.data)
+        user = User.Create(form.email.data, form.password.data)
         if user.can_send_verification():
             mailer.send_verification(user)
         login_user(user, remember=True)
@@ -65,8 +67,7 @@ def profile():
     form = ProfileForm()
     if form.validate_on_submit():
         if current_user.nickname != form.nickname.data:
-            current_user.nickname = form.nickname.data
-            db.session.commit()
+            current_user.update_nickname(form.nickname.data)
         return redirect(url_for('profile'))
 
     return render_template('profile.html', user=current_user, form=form)
@@ -81,12 +82,11 @@ def resend():
 
 
 @app.route('/activate/<email>/<key>')
-def activate(email:str=None, key:str=None):
+def activate(email: str = None, key: str = None):
     if email is not None and key is not None:
-        user = find_user(email)
-        if user and not user.is_activated():
-            if user.activate(key):
-                login_user(user, remember=True)
+        user = User.FindByEmail(email)
+        if user and not user.is_activated() and user.activate(key):
+            login_user(user, remember=True)
 
     return redirect(url_for('index'))
 

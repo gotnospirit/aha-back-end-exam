@@ -2,10 +2,10 @@ import string
 from flask_wtf import FlaskForm
 from wtforms import EmailField, PasswordField, SubmitField, HiddenField
 from wtforms.validators import InputRequired, Length, Email, EqualTo, ValidationError
-from www.models import find_user
+from www.models import User
 
 
-def validate_password(password: str):
+def validate_password(password):
     lowers = list(string.ascii_lowercase)
     if not any(s in password.data for s in lowers):
         raise ValidationError(
@@ -37,7 +37,7 @@ class SignupForm(FlaskForm):
     submit = SubmitField('Join us')
 
     def validate_email(self, email):
-        user = find_user(email.data)
+        user = User.FindByEmail(email.data)
         if user:
             raise ValidationError('User already exists.')
 
@@ -52,7 +52,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
     def validate_password(self, _):
-        user = find_user(self.email.data)
+        user = User.FindByEmail(self.email.data)
         if not user:
             raise ValidationError('User not found.')
         elif not user.check_password(self.password.data):
@@ -77,7 +77,7 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField('Change')
 
     def validate_old_pwd(self, old_pwd):
-        user = find_user(self.email.data)
+        user = User.FindByEmail(self.email.data)
         if not user or not user.check_password(old_pwd.data):
             raise ValidationError('Incorrect password.')
 

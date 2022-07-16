@@ -24,8 +24,8 @@ mailer = Mailer('smtp.gmail.com', 465, os.getenv('GMAIL_PASSWORD',
 
 
 @login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+def load_user(user_id: str):
+    return User.FindById(int(user_id))
 
 
 from www import routes

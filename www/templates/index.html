@@ -5,6 +5,11 @@
 {% if not current_user.is_activated() %}
 <a href="{{ url_for('resend') }}">Resend Email Verification</a>
 {% endif %}
+{% if statistics %}
+<p>Total number of users who have signed up: {{ statistics.total_users }}</p>
+<p>Total number of users with active sessions today: {{ statistics.total_active_today }}</p>
+<p>Average number of active session users in the last 7 days: {{ "%.2f" | format(statistics.avg_last_days) }}</p>
+{% endif %}
 {% if users %}
     <h1>Dashboard</h1>
     <table border="1">

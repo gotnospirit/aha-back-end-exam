@@ -17,7 +17,7 @@ flask run
 [x] User profile
 [x] Reset password
 [x] Dashboard
-[ ] User statistics
+[x] User statistics
 [ ] Google OAuth signup
 [ ] Facebook OAuth signup
 [ ] Verify OAuth account automatically -> no email verification
