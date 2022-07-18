@@ -1,5 +1,5 @@
 from www import app, mailer
-from www.oauth import google_config
+from www.oauth import google_config, facebook_config
 from www.models import User
 from flask import render_template, request, url_for, redirect
 from www.forms import SignupForm, LoginForm, ProfileForm, ChangePasswordForm
@@ -38,7 +38,10 @@ def signup():
         login_user(user, remember=True)
         return redirect(url_for('index'))
 
-    return render_template('signup.html', form=form, show_google_btn=google_config is not None)
+    return render_template('signup.html',
+                           form=form,
+                           show_google_btn=True if google_config else False,
+                           show_facebook_btn=True if facebook_config else False)
 
 
 @app.route('/login', methods=('GET', 'POST'))
@@ -53,7 +56,10 @@ def login():
         next_page = request.args.get('next')
         return redirect(next_page) if next_page else redirect(url_for('index'))
 
-    return render_template('login.html', form=form, show_google_btn=google_config is not None)
+    return render_template('login.html',
+                           form=form,
+                           show_google_btn=True if google_config else False,
+                           show_facebook_btn=True if facebook_config else False)
 
 
 @app.route('/logout')

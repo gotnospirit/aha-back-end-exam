@@ -18,6 +18,14 @@ Go to your [Google Console](https://console.developers.google.com/).
 Create an OAuth credential for "Web Application" with "Authorized redirect URIs" set to "{your_domain}/login/google/authorized".
 Download the json file as "google.json" in this current directory
 
+# Facebook OAuth
+Register as a [Facebook Developer](https://developers.facebook.com/docs/development/register/?locale=fr_FR).
+Create a "Customer" application.
+Copy the application ID & secret key in "App > Parameter > General".
+Set the values of "FACEBOOK_OAUTH_CLIENT_ID" and "FACEBOOK_OAUTH_CLIENT_SECRET" in ".env" file.
+Configure your app to use "Facebook Login" for "www".
+If your domain is not "localhost", configure the "Valid OAuth redirect URI" with "{your_domain}/login/facebook/authorized".
+
 # Create/reset the database
 python www\init_db.py
 
@@ -33,5 +41,6 @@ flask run
 [x] Dashboard
 [x] User statistics
 [x] Google OAuth signup/login
-[ ] Facebook OAuth signup/login
+[x] Facebook OAuth signup/login
 [x] Verify OAuth account automatically -> no email verification
+[ ] Merge account (email/pwd <-> oauth)

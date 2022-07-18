@@ -8,3 +8,13 @@
   </a>
 </div>
 {% endif %}
+{% if show_facebook_btn %}
+<hr />
+<div align="center">
+  <a href="{{ url_for('facebook.login') }}" class="login-btn">
+    <img id="facebook" alt="Facebook"
+      src="https://upload.wikimedia.org/wikipedia/en/thumb/0/04/Facebook_f_logo_%282021%29.svg/768px-Facebook_f_logo_%282021%29.svg.png">
+    <div class="btn-text">Login with Facebook</div>
+  </a>
+</div>
+{% endif %}

@@ -3,7 +3,7 @@ from flask import Flask
 from flask_login import LoginManager
 from www.models import db, User
 from www.mailer import Mailer
-from www.oauth import google_blueprint
+from www.oauth import google_blueprint, facebook_blueprint
 
 
 app = Flask(__name__)
@@ -15,6 +15,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 app.register_blueprint(google_blueprint, url_prefix="/login")
+app.register_blueprint(facebook_blueprint, url_prefix="/login")
 db.init_app(app)
 
 login_manager = LoginManager(app)
