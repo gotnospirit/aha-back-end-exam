@@ -1,4 +1,5 @@
 from www import app, mailer
+from www.oauth import google_config
 from www.models import User
 from flask import render_template, request, url_for, redirect
 from www.forms import SignupForm, LoginForm, ProfileForm, ChangePasswordForm
@@ -14,12 +15,13 @@ def index():
         users = User.FetchAll()
         statistics = User.GetStatistics()
 
-        form = ChangePasswordForm()
-        form.email.data = current_user.email
+        if current_user.password is not None:
+            form = ChangePasswordForm()
+            form.email.data = current_user.email
 
-        if form.validate_on_submit():
-            current_user.update_password(form.password.data)
-            return redirect(url_for('index'))
+            if form.validate_on_submit():
+                current_user.update_password(form.password.data)
+                return redirect(url_for('index'))
 
     return render_template('index.html', users=users, form=form, statistics=statistics)
 
@@ -32,12 +34,11 @@ def signup():
     form = SignupForm()
     if form.validate_on_submit():
         user = User.Create(form.email.data, form.password.data)
-        if user.can_send_verification():
-            mailer.send_verification(user)
+        mailer.send_verification(user)
         login_user(user, remember=True)
         return redirect(url_for('index'))
 
-    return render_template('signup.html', form=form)
+    return render_template('signup.html', form=form, show_google_btn=google_config is not None)
 
 
 @app.route('/login', methods=('GET', 'POST'))
@@ -52,7 +53,7 @@ def login():
         next_page = request.args.get('next')
         return redirect(next_page) if next_page else redirect(url_for('index'))
 
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form, show_google_btn=google_config is not None)
 
 
 @app.route('/logout')

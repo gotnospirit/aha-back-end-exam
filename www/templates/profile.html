@@ -10,21 +10,11 @@
 {% else %}
 <div>Your account was activated on {{ user.activated_at }} UTC</div>
 {% endif %}
-<hr/>
+<hr />
 <form method="POST">
-  {{ form.csrf_token }}
-  <p>
-      {{ form.nickname.label }}
-      {{ form.nickname(value=user.nickname) }}
-  </p>
-
-  {% if form.nickname.errors %}
-      <ul class="errors">
-          {% for error in form.nickname.errors %}<li>{{ error }}</li>{% endfor %}
-      </ul>
-  {% endif %}
-
-  {{ form.submit(formnovalidate=True) }}
+    {{ form.csrf_token }}
+    {{ form_tool.render_field(form.nickname, value=user.nickname) }}
+    {{ form_tool.render_submit(form.submit) }}
 </form>
 
 {% endblock %}

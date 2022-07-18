@@ -1,3 +1,8 @@
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Navigation bar */
 nav a {
   color: #d64161;
   font-size: 1.5em;
@@ -14,11 +19,79 @@ nav a::before {
   padding: 0 3px;
 }
 
+/* Forms */
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: 10px;
+  row-gap: 10px;
+  max-width: 25em;
+}
+
+form label {
+  text-align: right;
+  grid-column-end: span 1;
+}
+
+form input[type="text|email|password"] {
+  grid-column-end: span 1;
+}
+
+form .errors {
+  grid-column-end: span 2;
+  padding: 0 0 5px 0;
+  margin: 0;
+  list-style: none;
+  color: red;
+  text-align: left;
+}
+
+form input[type=submit] {
+  grid-column-end: span 2;
+}
+
+/* Flash messages */
+.flashes {
+  padding: 20px;
+  margin: 5px;
+  color: #970020;
+  background-color: #ffd5de;
+  list-style: none;
+}
+
+/* Dashboard */
 table {
   border-spacing: 0;
   border-collapse: collapse;
 }
 
-td {
+th, td {
   padding: .5em;
+}
+
+/* OAuth sign-up */
+.login-btn {
+  justify-content: center;
+  flex-direction: row;
+  display: flex;
+  background-color: rgb(255, 255, 255);
+  justify-content: center;
+  align-items: center;
+  max-width: 250px;
+  padding: 10px;
+  box-shadow: 3px 3px 3px rgb(170, 170, 170);
+  border-radius: 15px;
+  text-decoration: none;
+}
+
+.login-btn img {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+}
+
+.btn-text {
+  padding: 10px;
+  color: rgb(85, 85, 85);
+  flex: 0 0 180px;
 }

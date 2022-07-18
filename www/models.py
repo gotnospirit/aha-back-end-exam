@@ -7,6 +7,8 @@ from datetime import date, timedelta
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from sqlalchemy.orm import query_expression, with_expression
+from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
+from sqlalchemy.orm.exc import NoResultFound
 
 
 @event.listens_for(Engine, "connect")
@@ -26,9 +28,9 @@ class User(db.Model, UserMixin):
     signin_count = query_expression()
     last_signin_at = query_expression()
     email = db.Column(db.String(255), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    pwd_salt = db.Column(db.String(255), nullable=False)
     nickname = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
+    pwd_salt = db.Column(db.String(255), nullable=True)
     activation_key = db.Column(db.String(255), nullable=True)
     activated_at = db.Column(db.DateTime, nullable=True)
     sessions = db.relationship(
@@ -57,6 +59,8 @@ class User(db.Model, UserMixin):
         db.session.commit()
 
     def check_password(self, password: str) -> bool:
+        if self.password is None:
+            return password is None
         hash = bcrypt.hashpw(password.encode('utf-8'), self.pwd_salt)
         return hash == self.password
 
@@ -92,21 +96,32 @@ class User(db.Model, UserMixin):
         return ''.join(random.choice(chars) for _ in range(length))
 
     @staticmethod
-    def Create(email: str, password: str, is_activated=False) -> 'User':
+    def Create(email: str, password: str) -> 'User':
         salt = bcrypt.gensalt()
         hash = bcrypt.hashpw(password.encode('utf-8'), salt)
 
         user = User(email=email, password=hash, pwd_salt=salt,
                     nickname=email[:email.find("@")])
 
-        if not is_activated:
-            user.activation_key = User.__generate_random_string(50)
-        else:
-            user.activated_at = db.func.current_timestamp()
+        user.activation_key = User.__generate_random_string(50)
 
         user.add_session()
 
         db.session.add(user)
+        db.session.commit()
+        return user
+
+    @staticmethod
+    def CreateWithOAuth(email: str, nickname: str, oauth: 'OAuth') -> 'User':
+        user = User(email=email, nickname=nickname,
+                    activated_at=db.func.current_timestamp())
+
+        # Associate the new local user account with the OAuth token
+        oauth.user = user
+
+        user.add_session()
+
+        db.session.add_all([user, oauth])
         db.session.commit()
         return user
 
@@ -131,10 +146,9 @@ class User(db.Model, UserMixin):
     def GetStatistics() -> dict:
         # Total number of users who have signed up
         # Total number of users with active sessions today
-        total_active_today_query = db.session.query(db.func.count(UserSession.id)) \
+        total_active_today_query = db.session.query(db.func.count(db.distinct(UserSession.user_id))) \
             .select_from(UserSession) \
-            .filter(db.func.date(UserSession.logged_at) == date.today()) \
-            .group_by(UserSession.user_id)
+            .filter(db.func.date(UserSession.logged_at) == date.today())
 
         total_users, total_active_today = db.session.query(
             db.func.count(User.id).label('total_users'),
@@ -168,7 +182,29 @@ class User(db.Model, UserMixin):
 class UserSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey(
-        "user.id", ondelete="CASCADE"), nullable=False)
-    user = db.relationship("User", back_populates="sessions")
+        User.id, ondelete="CASCADE"), nullable=False)
+    user = db.relationship(User, back_populates="sessions")
     logged_at = db.Column(
         db.DateTime, server_default=db.func.current_timestamp(), nullable=False)
+
+
+class OAuth(OAuthConsumerMixin, db.Model):
+    provider_user_id = db.Column(db.String(256), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(
+        User.id, ondelete="CASCADE"), nullable=False)
+    user = db.relationship(User)
+
+    @staticmethod
+    def FindUser(provider: str, user_id: int) -> User:
+        query = OAuth.query.filter_by(
+            provider=provider, provider_user_id=user_id)
+
+        try:
+            return query.one().user
+        except NoResultFound:
+            return None
+
+    @staticmethod
+    def Create(provider: str, user_id: int, token: str) -> 'OAuth':
+        return OAuth(provider=provider,
+                     provider_user_id=user_id, token=token)
