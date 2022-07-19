@@ -9,6 +9,7 @@ from sqlalchemy import event
 from sqlalchemy.orm import query_expression, with_expression
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 
 @event.listens_for(Engine, "connect")
@@ -23,8 +24,9 @@ db = SQLAlchemy()
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(
-        db.DateTime, server_default=db.func.current_timestamp(), nullable=False)
+    created_at = db.Column(db.DateTime,
+                           server_default=db.func.current_timestamp(),
+                           nullable=False)
     signin_count = query_expression()
     last_signin_at = query_expression()
     email = db.Column(db.String(255), unique=True, nullable=False)
@@ -36,6 +38,13 @@ class User(db.Model, UserMixin):
     sessions = db.relationship(
         "UserSession",
         back_populates="user",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
+    oauths = db.relationship(
+        "OAuth",
+        back_populates="user",
+        collection_class=attribute_mapped_collection("provider"),
         cascade="all, delete",
         passive_deletes=True,
     )
@@ -89,6 +98,17 @@ class User(db.Model, UserMixin):
     def add_session(self) -> None:
         user_session = UserSession(logged_at=db.func.current_timestamp())
         self.sessions.append(user_session)
+
+    def link_oauth(self, oauth: 'OAuth') -> None:
+        if self.activated_at is None:
+            self.activated_at = db.func.current_timestamp()
+
+        oauth.user = self
+
+        self.add_session()
+
+        db.session.add_all([self, oauth])
+        db.session.commit()
 
     @staticmethod
     def __generate_random_string(length: int) -> str:
@@ -181,18 +201,22 @@ class User(db.Model, UserMixin):
 
 class UserSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey(
-        User.id, ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(db.Integer,
+                        db.ForeignKey(User.id, ondelete="CASCADE"),
+                        nullable=False)
     user = db.relationship(User, back_populates="sessions")
-    logged_at = db.Column(
-        db.DateTime, server_default=db.func.current_timestamp(), nullable=False)
+    logged_at = db.Column(db.DateTime,
+                          server_default=db.func.current_timestamp(),
+                          nullable=False)
 
 
 class OAuth(OAuthConsumerMixin, db.Model):
-    provider_user_id = db.Column(db.String(256), unique=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey(
-        User.id, ondelete="CASCADE"), nullable=False)
-    user = db.relationship(User)
+    provider_user_id = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer,
+                        db.ForeignKey(User.id, ondelete="CASCADE"),
+                        nullable=False)
+    user = db.relationship(User, back_populates="oauths")
+    __table_args__ = (db.UniqueConstraint('provider', 'provider_user_id'), )
 
     @staticmethod
     def FindUser(provider: str, user_id: int) -> User:

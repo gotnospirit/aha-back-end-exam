@@ -28,6 +28,7 @@ def validate_password(password):
 
 
 class SignupForm(FlaskForm):
+    user = HiddenField()
     email = EmailField('Email', validators=[
                        InputRequired(), Length(max=255), Email()])
     password = PasswordField('Password', validators=[InputRequired(),
@@ -38,8 +39,9 @@ class SignupForm(FlaskForm):
 
     def validate_email(self, email):
         user = User.FindByEmail(email.data)
-        if user:
+        if user and user.password is not None:
             raise ValidationError('User already exists.')
+        self.user.data = user
 
     def validate_password(self, password):
         validate_password(password)

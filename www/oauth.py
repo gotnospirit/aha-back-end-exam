@@ -96,10 +96,16 @@ def oauth_authorized_fn(blueprint, token):
         user.on_logged_in()
         login_user(user, remember=True)
     else:
-        email = oauth_info['email']
-        nickname = oauth_info.get('name', email[:email.find("@")])
         oauth = OAuth.Create(blueprint.name, provider_user_id, token)
-        user = User.CreateWithOAuth(email, nickname, oauth)
+
+        email = oauth_info['email']
+        user = User.FindByEmail(email)
+        if user:
+            user.link_oauth(oauth)
+        else:
+            nickname = oauth_info.get('name', email[:email.find("@")])
+            user = User.CreateWithOAuth(email, nickname, oauth)
+
         login_user(user, remember=True)
 
     # Disable Flask-Dance's default behavior for saving the OAuth token

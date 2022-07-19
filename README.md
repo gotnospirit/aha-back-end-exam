@@ -43,4 +43,4 @@ flask run
 - [x] Google OAuth signup/login
 - [x] Facebook OAuth signup/login
 - [x] Verify OAuth account automatically -> no email verification
-- [ ] Merge account (email/pwd <-> oauth)
+- [x] Merge account (email/pwd <-> oauth)

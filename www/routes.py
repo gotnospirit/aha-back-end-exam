@@ -33,8 +33,13 @@ def signup():
 
     form = SignupForm()
     if form.validate_on_submit():
-        user = User.Create(form.email.data, form.password.data)
-        mailer.send_verification(user)
+        user = form.user.data
+        if user:
+            # SignupForm has retrieved a user created from OAuth query
+            user.update_password(form.password.data)
+        else:
+            user = User.Create(form.email.data, form.password.data)
+            mailer.send_verification(user)
         login_user(user, remember=True)
         return redirect(url_for('index'))
 
